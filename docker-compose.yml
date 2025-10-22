@@ -25,6 +25,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        XDSTARCLIENT_VERSION: ${XDSTARCLIENT_VERSION:-3.1.0}
     container_name: gazelle-jboss
     depends_on:
       postgres:

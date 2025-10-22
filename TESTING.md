@@ -53,10 +53,12 @@ This document describes the validation performed on the Gazelle Docker setup.
    - Runtime testing requires actual Docker installation
    - Configuration validated statically only
 
-2. **XDStarClient.ear Required**
-   - The actual application EAR file is not included
-   - Must be obtained separately from IHE Catalyst
-   - Deployment instructions provided in README
+2. **XDStarClient.ear Automatic Download**
+   - The Dockerfile automatically downloads XDStarClient 3.1.0 during build
+   - Maven coordinates: `net.ihe.gazelle.xdstar:XDStarClient:3.1.0`
+   - Downloads from Gazelle Nexus repository
+   - If automatic download fails, manual methods are available
+   - See README.md for alternative download options
 
 3. **Network Dependencies**
    - JBoss AS 7.2.0 download from jboss.org (line 22 in Dockerfile)
@@ -110,6 +112,7 @@ When testing this setup on a system with Docker:
 - [ ] Run `make build` to build images
   - [ ] Verify JBoss AS downloads successfully
   - [ ] Verify PostgreSQL JDBC driver downloads
+  - [ ] Verify XDStarClient 3.1.0 downloads from Nexus
   - [ ] Verify OpenJDK 7 installs correctly
 - [ ] Run `make up` to start services
   - [ ] Verify PostgreSQL container starts: `make status`
@@ -126,11 +129,11 @@ When testing this setup on a system with Docker:
   - [ ] PostgreSQL: `make psql` (should connect successfully)
   - [ ] JBoss Admin Console: http://localhost:9990/console
   - [ ] JBoss HTTP: http://localhost:8080/
-- [ ] Deploy XDStarClient.ear (if available)
-  - [ ] Place EAR in deployments/ directory
-  - [ ] Run `make deploy`
+- [ ] Verify XDStarClient deployment
+  - [ ] Check that XDStarClient.ear was downloaded during build
   - [ ] Monitor logs for successful deployment
   - [ ] Access: http://localhost:8080/XDStarClient
+  - [ ] Verify application loads correctly
 - [ ] Test volume persistence
   - [ ] Create test data
   - [ ] Run `make restart`

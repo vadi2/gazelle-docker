@@ -45,6 +45,16 @@ COPY datasource-config.cli /opt/jboss/datasource-config.cli
 RUN wget https://jdbc.postgresql.org/download/postgresql-9.4-1206-jdbc41.jar \
     -O ${JBOSS_HOME}/standalone/deployments/postgresql-9.4-1206-jdbc41.jar
 
+# Download XDStarClient.ear from Gazelle Nexus repository
+# Maven coordinates: net.ihe.gazelle.xdstar:XDStarClient:3.1.0
+# Try multiple possible artifact names (XDStarClient-ear or XDStarClient)
+ARG XDSTARCLIENT_VERSION=3.1.0
+RUN wget https://gazelle.ihe.net/nexus/service/local/repositories/releases/content/net/ihe/gazelle/xdstar/XDStarClient-ear/${XDSTARCLIENT_VERSION}/XDStarClient-ear-${XDSTARCLIENT_VERSION}.ear \
+    -O ${JBOSS_HOME}/standalone/deployments/XDStarClient.ear || \
+    wget https://gazelle.ihe.net/nexus/service/local/repositories/releases/content/net/ihe/gazelle/xdstar/XDStarClient/${XDSTARCLIENT_VERSION}/XDStarClient-${XDSTARCLIENT_VERSION}.ear \
+    -O ${JBOSS_HOME}/standalone/deployments/XDStarClient.ear || \
+    echo "Warning: Could not download XDStarClient.ear automatically. Please place it manually in deployments/ directory."
+
 # Copy startup script
 COPY start-jboss.sh /opt/jboss/start-jboss.sh
 RUN chmod +x /opt/jboss/start-jboss.sh

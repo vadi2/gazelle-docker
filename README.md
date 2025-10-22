@@ -10,16 +10,26 @@ This project provides a containerized environment for the Gazelle XDStarClient a
 
 - **PostgreSQL 9.4**: Database server for XDStarClient data
 - **JBoss AS 7.2.0.Final**: Application server running on OpenJDK 7
-- **XDStarClient**: IHE testing tool (EAR file needs to be provided)
+- **XDStarClient 3.1.0**: IHE testing tool (automatically downloaded during build)
 
 ## Prerequisites
 
 - Docker Engine 20.10 or later
 - Docker Compose 1.29 or later (both `docker compose` and `docker-compose` supported)
 - At least 4GB of available RAM
-- XDStarClient.ear file (to be placed in deployments folder)
+- Internet connection (for downloading XDStarClient.ear during build)
 
 **Note**: The Makefile automatically detects whether you have `docker-compose` (standalone) or `docker compose` (plugin) and uses the appropriate command.
+
+### XDStarClient.ear Download
+
+The Dockerfile **automatically downloads XDStarClient 3.1.0** from the Gazelle Nexus repository during the build process. No manual download is required!
+
+Maven coordinates: `net.ihe.gazelle.xdstar:XDStarClient:3.1.0`
+
+If the automatic download fails (due to network issues or repository access), you can:
+1. Use the included download script: `./download-xdstarclient.sh`
+2. Manually place XDStarClient.ear in the `deployments/` directory before building
 
 ## Quick Start
 
@@ -37,29 +47,34 @@ cp .env.example .env
 nano .env
 ```
 
-### 2. Add XDStarClient Application
+### 2. Build and Start
 
-Place your `XDStarClient.ear` file in the project directory:
-
-```bash
-# Create a deployments directory
-mkdir -p deployments
-
-# Copy your XDStarClient.ear file
-cp /path/to/XDStarClient.ear deployments/
-```
-
-### 3. Start the Services
+XDStarClient.ear is automatically downloaded during the Docker build:
 
 ```bash
 # Build and start all services
-docker-compose up -d
+make build  # Downloads XDStarClient 3.1.0 automatically
+make up
+```
 
+**Optional**: If you need to manually download XDStarClient first:
+
+```bash
+# Download XDStarClient 3.1.0 (or specify different version)
+./download-xdstarclient.sh
+
+# Or download a specific version
+./download-xdstarclient.sh 3.0.0
+```
+
+### 3. Monitor the Services
+
+```bash
 # View logs
-docker-compose logs -f
+make logs
 
 # Check service status
-docker-compose ps
+make status
 ```
 
 ### 4. Access the Application
@@ -101,23 +116,18 @@ The setup uses Docker volumes for data persistence:
 - `jboss_deployments`: JBoss deployment files
 - `jboss_config`: JBoss configuration
 
-### Deploying XDStarClient
+### XDStarClient Version
 
-To deploy the XDStarClient application:
+The default version is 3.1.0. To build with a different version:
 
 ```bash
-# Copy the EAR file to the deployments volume
-docker cp XDStarClient.ear gazelle-jboss:/opt/jboss/standalone/deployments/
-
-# Monitor deployment
-docker-compose logs -f jboss
+# Build with a specific version
+docker compose build --build-arg XDSTARCLIENT_VERSION=3.0.0
 ```
 
-Alternatively, you can modify the Dockerfile to include the EAR file during build:
-
+Or update the version in the Dockerfile:
 ```dockerfile
-# Add to Dockerfile before CMD
-COPY deployments/XDStarClient.ear ${JBOSS_HOME}/standalone/deployments/
+ARG XDSTARCLIENT_VERSION=3.1.0  # Change this line
 ```
 
 ## Management Commands
