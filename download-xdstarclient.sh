@@ -93,9 +93,7 @@ if [ -f "$OUTPUT_DIR/XDStarClient.ear" ]; then
     echo "✓ XDStarClient.ear downloaded successfully to $OUTPUT_DIR/"
     echo ""
     echo "You can now build and deploy with:"
-    echo "  make build"
-    echo "  make up"
-    echo "  make deploy"
+    echo "  docker compose up -d --build"
 else
     echo ""
     echo "✗ Download failed."
