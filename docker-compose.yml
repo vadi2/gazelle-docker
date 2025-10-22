@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:9.4
+    container_name: gazelle-postgres
+    environment:
+      POSTGRES_DB: xdstar-client
+      POSTGRES_USER: gazelle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gazelle123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - gazelle-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gazelle -d xdstar-client"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  jboss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gazelle-jboss
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: xdstar-client
+      POSTGRES_USER: gazelle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gazelle123}
+      JBOSS_ADMIN_USER: ${JBOSS_ADMIN_USER:-admin}
+      JBOSS_ADMIN_PASSWORD: ${JBOSS_ADMIN_PASSWORD:-admin123}
+    volumes:
+      - xdstar_data:/opt/XDStarClient
+      - xdstar_xsd:/opt/XDStarClient/xsd
+      - xdstar_uploads:/opt/XDStarClient/uploadedFiles
+      - xdstar_tmp:/opt/XDStarClient/tmp
+      - xdstar_attachments:/opt/XDStarClient/attachments
+      - jboss_deployments:/opt/jboss/standalone/deployments
+      - jboss_config:/opt/jboss/standalone/configuration
+    ports:
+      - "8080:8080"
+      - "9990:9990"  # JBoss admin console
+    networks:
+      - gazelle-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  postgres_data:
+    driver: local
+  xdstar_data:
+    driver: local
+  xdstar_xsd:
+    driver: local
+  xdstar_uploads:
+    driver: local
+  xdstar_tmp:
+    driver: local
+  xdstar_attachments:
+    driver: local
+  jboss_deployments:
+    driver: local
+  jboss_config:
+    driver: local
+
+networks:
+  gazelle-network:
+    driver: bridge
