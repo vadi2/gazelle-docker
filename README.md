@@ -15,9 +15,11 @@ This project provides a containerized environment for the Gazelle XDStarClient a
 ## Prerequisites
 
 - Docker Engine 20.10 or later
-- Docker Compose 1.29 or later
+- Docker Compose 1.29 or later (both `docker compose` and `docker-compose` supported)
 - At least 4GB of available RAM
 - XDStarClient.ear file (to be placed in deployments folder)
+
+**Note**: The Makefile automatically detects whether you have `docker-compose` (standalone) or `docker compose` (plugin) and uses the appropriate command.
 
 ## Quick Start
 
@@ -329,6 +331,17 @@ This Docker setup is provided as-is for running Gazelle XDStarClient. Please ref
 - [IHE Catalyst Connectathon](https://connectathon.ihe-catalyst.net/)
 - [JBoss AS 7 Documentation](https://docs.jboss.org/author/display/AS7/Documentation)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/9.4/)
+
+## Testing and Validation
+
+See [TESTING.md](TESTING.md) for:
+- Configuration validation results
+- Testing checklist
+- Expected behavior and log output
+- Known limitations and potential issues
+- Manual testing commands
+
+All configuration files have been validated for syntax correctness. Runtime testing requires a Docker installation.
 
 ## Support
 

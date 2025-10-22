@@ -36,10 +36,9 @@ RUN mkdir -p /opt/XDStarClient/xsd \
     /opt/XDStarClient/attachments
 
 # Create JBoss admin user (will be overridden by environment variables)
-RUN ${JBOSS_HOME}/bin/add-user.sh admin admin123 --silent
+RUN ${JBOSS_HOME}/bin/add-user.sh --silent admin admin123
 
 # Copy configuration files
-COPY standalone.xml /opt/jboss/standalone/configuration/standalone.xml 2>/dev/null || true
 COPY datasource-config.cli /opt/jboss/datasource-config.cli
 
 # Download PostgreSQL JDBC driver
