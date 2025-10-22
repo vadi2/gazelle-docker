@@ -1,0 +1,30 @@
+# Environment variables
+.env
+
+# Deployment files (EAR/WAR)
+deployments/*.ear
+deployments/*.war
+deployments/*.deployed
+deployments/*.failed
+deployments/*.pending
+
+# JBoss configuration (user-specific)
+jboss-config/standalone.xml
+
+# Logs
+*.log
+logs/
+
+# Docker volumes (when using local bind mounts)
+data/
+postgres-data/
+jboss-logs/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db

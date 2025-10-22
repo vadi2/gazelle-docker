@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:9.4
+    container_name: gazelle-postgres
+    environment:
+      POSTGRES_DB: xdstar-client
+      POSTGRES_USER: gazelle
+      POSTGRES_PASSWORD: gazelle
+      POSTGRES_ENCODING: UTF8
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - gazelle-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gazelle -d xdstar-client"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # JBoss Application Server Service
+  jboss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gazelle-jboss
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database connection settings
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: xdstar-client
+      DB_USER: gazelle
+      DB_PASSWORD: gazelle
+      # JBoss settings
+      JBOSS_HOME: /opt/jboss-as-7.2.0.Final
+      JAVA_HOME: /usr/lib/jvm/java-7-openjdk-amd64
+      JAVA_OPTS: "-Xms512m -Xmx2048m -XX:MaxPermSize=512m"
+    volumes:
+      # Application directories
+      - xdstar-uploads:/opt/XDStarClient/uploadedFiles
+      - xdstar-tmp:/opt/XDStarClient/tmp
+      - xdstar-attachments:/opt/XDStarClient/attachments
+      # JBoss deployments (mount your XDStarClient.ear here)
+      - ./deployments:/opt/jboss-as-7.2.0.Final/standalone/deployments
+      # JBoss configuration
+      - ./jboss-config/standalone.xml:/opt/jboss-as-7.2.0.Final/standalone/configuration/standalone.xml
+      # Logs
+      - jboss-logs:/opt/jboss-as-7.2.0.Final/standalone/log
+    ports:
+      - "8080:8080"
+      - "9990:9990"  # Management console
+    networks:
+      - gazelle-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+
+networks:
+  gazelle-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  xdstar-uploads:
+  xdstar-tmp:
+  xdstar-attachments:
+  jboss-logs:

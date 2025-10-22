@@ -1,0 +1,33 @@
+<!-- JBoss AS 7.2.0 Standalone Configuration Template for Gazelle XDStar-Client -->
+<!--
+This is a template file showing the required datasource configuration.
+To use this:
+1. Copy the default standalone.xml from JBoss:
+   docker cp gazelle-jboss:/opt/jboss-as-7.2.0.Final/standalone/configuration/standalone.xml ./jboss-config/
+
+2. Add the following datasource configuration inside the <datasources> section:
+
+    <datasource jndi-name="java:/XDStarClientDS" pool-name="XDStarClientDS" enabled="true" use-java-context="true">
+        <connection-url>jdbc:postgresql://postgres:5432/xdstar-client</connection-url>
+        <driver>postgresql</driver>
+        <security>
+            <user-name>gazelle</user-name>
+            <password>gazelle</password>
+        </security>
+        <validation>
+            <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"/>
+            <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter"/>
+        </validation>
+    </datasource>
+
+3. Add the PostgreSQL driver inside the <drivers> section:
+
+    <driver name="postgresql" module="org.postgresql">
+        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+    </driver>
+
+4. Save the modified standalone.xml in this directory (jboss-config/)
+
+5. Restart the containers: docker-compose restart jboss
+
+-->
