@@ -106,27 +106,25 @@ RUN wget https://cdn.azul.com/zulu/bin/zulu7.*.tar.gz
 When testing this setup on a system with Docker:
 
 - [ ] Verify Docker is installed: `docker --version`
-- [ ] Verify Docker Compose is available: `docker compose version` or `docker-compose version`
-- [ ] Run `make setup` to initialize environment
-- [ ] Check .env file is created with correct values
-- [ ] Run `make build` to build images
+- [ ] Verify Docker Compose is available: `docker compose version`
+- [ ] Copy environment template: `cp .env.example .env`
+- [ ] Build and start: `docker compose up -d --build`
   - [ ] Verify JBoss AS downloads successfully
   - [ ] Verify PostgreSQL JDBC driver downloads
   - [ ] Verify XDStarClient 3.1.0 downloads from Nexus
   - [ ] Verify OpenJDK 7 installs correctly
-- [ ] Run `make up` to start services
-  - [ ] Verify PostgreSQL container starts: `make status`
+  - [ ] Verify PostgreSQL container starts
   - [ ] Verify PostgreSQL health check passes
   - [ ] Verify JBoss container starts
   - [ ] Check JBoss waits for PostgreSQL before starting
-- [ ] Check logs: `make logs`
+- [ ] Check logs: `docker compose logs -f`
   - [ ] PostgreSQL: Look for "database system is ready to accept connections"
   - [ ] JBoss: Look for "Started server" or similar
 - [ ] Verify datasource configuration
   - [ ] Check XDStarClientDS is created in JBoss
   - [ ] Test database connection from JBoss
 - [ ] Access services:
-  - [ ] PostgreSQL: `make psql` (should connect successfully)
+  - [ ] PostgreSQL: `docker compose exec postgres psql -U gazelle -d xdstar-client`
   - [ ] JBoss Admin Console: http://localhost:9990/console
   - [ ] JBoss HTTP: http://localhost:8080/
 - [ ] Verify XDStarClient deployment
@@ -136,12 +134,11 @@ When testing this setup on a system with Docker:
   - [ ] Verify application loads correctly
 - [ ] Test volume persistence
   - [ ] Create test data
-  - [ ] Run `make restart`
+  - [ ] Restart: `docker compose restart`
   - [ ] Verify data persists
 - [ ] Test backup/restore
-  - [ ] Run `make backup`
-  - [ ] Verify backup file created in backups/
-  - [ ] Test restore: `make restore FILE=backups/file.sql`
+  - [ ] Backup: `docker compose exec postgres pg_dump -U gazelle xdstar-client > backup.sql`
+  - [ ] Restore: `docker compose exec -T postgres psql -U gazelle -d xdstar-client < backup.sql`
 
 ### Expected Behavior
 
@@ -183,7 +180,7 @@ Started server in XXXms
 
 ```bash
 # Test PostgreSQL connection
-docker exec gazelle-postgres psql -U gazelle -d xdstar-client -c "SELECT version();"
+docker compose exec postgres psql -U gazelle -d xdstar-client -c "SELECT version();"
 
 # Test JBoss is running
 curl http://localhost:8080/
@@ -192,13 +189,13 @@ curl http://localhost:8080/
 curl http://localhost:9990/console
 
 # View JBoss deployments
-docker exec gazelle-jboss ls -la /opt/jboss/standalone/deployments/
+docker compose exec jboss ls -la /opt/jboss/standalone/deployments/
 
 # Check datasource configuration
-docker exec gazelle-jboss /opt/jboss/bin/jboss-cli.sh --connect --command="/subsystem=datasources:read-resource"
+docker compose exec jboss /opt/jboss/bin/jboss-cli.sh --connect --command="/subsystem=datasources:read-resource"
 
 # Monitor JBoss server log
-docker exec gazelle-jboss tail -f /opt/jboss/standalone/log/server.log
+docker compose exec jboss tail -f /opt/jboss/standalone/log/server.log
 ```
 
 ### Performance Expectations
