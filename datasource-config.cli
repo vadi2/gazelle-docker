@@ -1,0 +1,34 @@
+# JBoss CLI script to configure PostgreSQL datasource for XDStarClient
+
+embed-server --server-config=standalone.xml
+
+# Add PostgreSQL driver module
+/subsystem=datasources/jdbc-driver=postgresql:add( \
+    driver-name=postgresql, \
+    driver-module-name=org.postgresql, \
+    driver-class-name=org.postgresql.Driver, \
+    driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource \
+)
+
+# Add XDStarClientDS datasource
+data-source add \
+    --name=XDStarClientDS \
+    --jndi-name=java:/XDStarClientDS \
+    --driver-name=postgresql \
+    --connection-url=jdbc:postgresql://${env.POSTGRES_HOST:postgres}:${env.POSTGRES_PORT:5432}/${env.POSTGRES_DB:xdstar-client} \
+    --user-name=${env.POSTGRES_USER:gazelle} \
+    --password=${env.POSTGRES_PASSWORD:gazelle123} \
+    --validate-on-match=true \
+    --background-validation=false \
+    --valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker \
+    --exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter \
+    --min-pool-size=5 \
+    --max-pool-size=20 \
+    --pool-prefill=true \
+    --use-ccm=true
+
+# Enable the datasource
+data-source enable --name=XDStarClientDS
+
+# Stop the embedded server
+stop-embedded-server
