@@ -84,6 +84,15 @@
             <logger category="jacorb.config">
                 <level name="ERROR"/>
             </logger>
+            <logger category="org.jboss.seam">
+                <level name="DEBUG"/>
+            </logger>
+            <logger category="org.apache.catalina">
+                <level name="DEBUG"/>
+            </logger>
+            <logger category="org.jboss.as.server.deployment">
+                <level name="DEBUG"/>
+            </logger>
             <root-logger>
                 <level name="INFO"/>
                 <handlers>

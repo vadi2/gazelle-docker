@@ -123,23 +123,13 @@ RUN cd ${JBOSS_HOME}/standalone/deployments && \
     echo '		</dependencies>' >> META-INF/jboss-deployment-structure.xml && \
     echo '	</deployment>' >> META-INF/jboss-deployment-structure.xml && \
     echo '</jboss-deployment-structure>' >> META-INF/jboss-deployment-structure.xml && \
-    echo '<?xml version="1.0" encoding="UTF-8"?>' > components.xml && \
-    echo '<components xmlns="http://jboss.com/products/seam/components"' >> components.xml && \
-    echo '            xmlns:core="http://jboss.com/products/seam/core"' >> components.xml && \
-    echo '            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' >> components.xml && \
-    echo '            xsi:schemaLocation="http://jboss.com/products/seam/components http://jboss.com/products/seam/components-2.3.xsd' >> components.xml && \
-    echo '                                http://jboss.com/products/seam/core http://jboss.com/products/seam/core-2.3.xsd">' >> components.xml && \
-    echo '    <!-- Configure JNDI pattern for JBoss AS 7 -->' >> components.xml && \
-    echo '    <core:init jndi-pattern="java:app/#{ejbJarSimpleName}/#{ejbName}"/>' >> components.xml && \
-    echo '    <!-- Disable SSO and optional components for standalone deployment -->' >> components.xml && \
-    echo '    <component name="ssoClientRegister" installed="false"/>' >> components.xml && \
-    echo '    <component name="AssertionWSProvider" installed="false"/>' >> components.xml && \
-    echo '    <component name="DSUBModelBasedWS" installed="false"/>' >> components.xml && \
-    echo '    <component name="WADOModelBasedWS" installed="false"/>' >> components.xml && \
-    echo '    <component name="DSUBRecipientWS" installed="false"/>' >> components.xml && \
-    echo '    <component name="KSAInitManager" installed="false"/>' >> components.xml && \
-    echo '    <component name="ModelBasedValidationWS" installed="false"/>' >> components.xml && \
-    echo '</components>' >> components.xml && \
+    unzip -q XDStarClient-war-*.war WEB-INF/components.xml -d war-extract && \
+    cp war-extract/WEB-INF/components.xml components.xml && \
+    rm -rf war-extract && \
+    sed -i ':a;N;$!ba;s|<component class="net.ihe.gazelle.xdstar.util.PUProviderExtended"[^>]*>||g' components.xml && \
+    sed -i 's|<core:init debug="false" jndi-pattern="java:app/XDStarClient/#{ejbName}"/>|<core:init jndi-pattern="java:app/#{ejbJarSimpleName}/#{ejbName}"/>|g' components.xml && \
+    sed -i ':a;N;$!ba;s|entity-manager-factory="#{entityManagerFactoryExtended}"||g' components.xml && \
+    sed -i 's|</components>|    <!-- Disable SSO and optional components for standalone deployment -->\n    <component name="ssoClientRegister" installed="false"/>\n    <component name="AssertionWSProvider" installed="false"/>\n    <component name="DSUBModelBasedWS" installed="false"/>\n    <component name="WADOModelBasedWS" installed="false"/>\n    <component name="DSUBRecipientWS" installed="false"/>\n    <component name="KSAInitManager" installed="false"/>\n    <component name="ModelBasedValidationWS" installed="false"/>\n</components>|' components.xml && \
     mkdir -p ejb-temp && \
     unzip -q XDStarClient-ejb.jar -d ejb-temp && \
     rm -fv ejb-temp/net/ihe/gazelle/xdstar/validator/ws/DSUBValidatorWS.class && \
