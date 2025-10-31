@@ -128,14 +128,14 @@ RUN cd ${JBOSS_HOME}/standalone/deployments && \
     rm -rf war-extract && \
     sed -i ':a;N;$!ba;s|<component class="net.ihe.gazelle.xdstar.util.PUProviderExtended"[^>]*>||g' components.xml && \
     sed -i 's|<core:init debug="false" jndi-pattern="java:app/XDStarClient/#{ejbName}"/>|<core:init jndi-pattern="java:app/#{ejbJarSimpleName}/#{ejbName}"/>|g' components.xml && \
-    sed -i ':a;N;$!ba;s|entity-manager-factory="#{entityManagerFactoryExtended}"||g' components.xml && \
+    sed -i ':a;N;$!ba;s|entity-manager-factory="#{entityManagerFactoryExtended}"|entity-manager-factory="#{entityManagerFactory}"|g' components.xml && \
     sed -i 's|</components>|    <!-- Disable SSO and optional components for standalone deployment -->\n    <component name="ssoClientRegister" installed="false"/>\n    <component name="AssertionWSProvider" installed="false"/>\n    <component name="DSUBModelBasedWS" installed="false"/>\n    <component name="WADOModelBasedWS" installed="false"/>\n    <component name="DSUBRecipientWS" installed="false"/>\n    <component name="KSAInitManager" installed="false"/>\n    <component name="ModelBasedValidationWS" installed="false"/>\n</components>|' components.xml && \
     mkdir -p ejb-temp && \
     unzip -q XDStarClient-ejb.jar -d ejb-temp && \
     rm -fv ejb-temp/net/ihe/gazelle/xdstar/validator/ws/DSUBValidatorWS.class && \
     rm -fv ejb-temp/net/ihe/gazelle/xdstar/validator/ws/WADOValidatorWS.class && \
     rm -fv ejb-temp/net/ihe/gazelle/xdstar/validator/ws/XDSMetadataValidatorWS.class && \
-    rm -fv ejb-temp/net/ihe/gazelle/xdsar/dsub/ws/DSUBRecipientWS.class && \
+    rm -fv ejb-temp/net/ihe/gazelle/xdstar/validator/ws/DSUBRecipientWS.class && \
     rm -fv ejb-temp/net/ihe/gazelle/xdstar/testplan/action/KSAInitManager.class && \
     rm -fv ejb-temp/net/ihe/gazelle/xdstar/util/PUProviderExtended.class && \
     rm -fv ejb-temp/net/ihe/gazelle/xdstar/util/PUProviderExtendedLocal.class && \
@@ -151,8 +151,25 @@ RUN cd ${JBOSS_HOME}/standalone/deployments && \
     cp components.xml war-temp/WEB-INF/ && \
     sed -i ':a;N;$!ba;s|<listener>\s*<listener-class>org.jasig.cas.client.session.SingleSignOutHttpSessionListener</listener-class>\s*</listener>||g' war-temp/WEB-INF/web.xml && \
     echo "Removed CAS listener from web.xml" && \
+    perl -i -p0e 's|<filter>.*?<filter-name>CAS Single Sign Out Filter</filter-name>.*?</filter>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter>.*?<filter-name>CAS Validation Filter</filter-name>.*?</filter>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter>.*?<filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>.*?</filter>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter>.*?<filter-name>Gazelle CAS Authentication Filter</filter-name>.*?</filter>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter>.*?<filter-name>Gazelle Ip Authentication Filter</filter-name>.*?</filter>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter>.*?<filter-name>Gazelle CAS logout filter</filter-name>.*?</filter>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter>.*?<filter-name>ExpirationFilter</filter-name>.*?</filter>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter-mapping>.*?<filter-name>CAS Single Sign Out Filter</filter-name>.*?</filter-mapping>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter-mapping>.*?<filter-name>CAS Validation Filter</filter-name>.*?</filter-mapping>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter-mapping>.*?<filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>.*?</filter-mapping>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter-mapping>.*?<filter-name>Gazelle CAS Authentication Filter</filter-name>.*?</filter-mapping>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter-mapping>.*?<filter-name>Gazelle Ip Authentication Filter</filter-name>.*?</filter-mapping>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter-mapping>.*?<filter-name>Gazelle CAS logout filter</filter-name>.*?</filter-mapping>||gs' war-temp/WEB-INF/web.xml && \
+    perl -i -p0e 's|<filter-mapping>.*?<filter-name>ExpirationFilter</filter-name>.*?</filter-mapping>||gs' war-temp/WEB-INF/web.xml && \
+    echo "Removed CAS/SSO filters and filter-mappings from web.xml" && \
     sed -i 's|java:app/mbval-documentation-ejb/AssertionWSProvider,||g' war-temp/WEB-INF/web.xml && \
     echo "Removed AssertionWSProvider from resteasy.jndi.resources" && \
+    sed -i 's|</web-app>|    <servlet>\n        <servlet-name>Faces Servlet</servlet-name>\n        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>\n        <load-on-startup>1</load-on-startup>\n    </servlet>\n    <servlet-mapping>\n        <servlet-name>Faces Servlet</servlet-name>\n        <url-pattern>*.seam</url-pattern>\n    </servlet-mapping>\n</web-app>|' war-temp/WEB-INF/web.xml && \
+    echo "Added Faces Servlet mapping for *.seam URLs" && \
     cd war-temp && \
     zip -r -q ../XDStarClient-war-*.war . && \
     cd .. && \
