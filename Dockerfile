@@ -84,7 +84,8 @@ RUN cd ${JBOSS_HOME}/standalone/deployments && \
     sed -i ':a;N;$!ba;s|<module>[[:space:]]*<ejb>mbval-documentation-ejb.jar</ejb>[[:space:]]*</module>||g' META-INF/application.xml && \
     echo "Removed mbval module from application.xml" && \
     cd lib && \
-    rm -fv m2m-v7-*.jar sso-*-v7-*.jar cas-client-v7-*.jar && \
+    rm -fv m2m-v7-*.jar gum-client-*.jar && \
+    echo "Removed M2M and GUM client JARs (keeping SSO/CAS JARs for authentication framework)" && \
     mkdir -p /tmp/usercontext-stub/net/ihe/gazelle/users && \
     echo 'package net.ihe.gazelle.users; public interface UserContext {}' > /tmp/usercontext-stub/net/ihe/gazelle/users/UserContext.java && \
     cd /tmp/usercontext-stub && \
