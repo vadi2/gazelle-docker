@@ -138,4 +138,49 @@ export JAVA_OPTS="$JAVA_OPTS -Dorg.jboss.seam.core.init.debug=false"
 export JAVA_OPTS="$JAVA_OPTS -Dorg.jboss.seam.core.init.jndiPattern=#{ejbName}/no-interface"
 
 echo "Starting JBoss AS 7.1.1 with full profile (includes messaging)..."
-exec ${JBOSS_HOME}/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0
+
+# Start JBoss in background to allow post-deployment initialization
+${JBOSS_HOME}/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 &
+JBOSS_PID=$!
+
+# Background task: Wait for deployment, then initialize database configuration
+(
+  echo "Waiting for XDStarClient deployment to complete..."
+  # Wait for deployment success message in logs (JBAS018559: Deployed "XDStarClient.ear")
+  timeout=300
+  elapsed=0
+  LOG_FILE="${JBOSS_HOME}/standalone/log/server.log"
+
+  while [ $elapsed -lt $timeout ]; do
+    if [ -f "$LOG_FILE" ] && grep -q 'JBAS018559: Deployed "XDStarClient.ear"' "$LOG_FILE"; then
+      echo "XDStarClient deployed successfully!"
+      sleep 5  # Give it a moment to fully initialize
+
+      # Check if configuration already exists (avoid duplicate inserts)
+      COUNT=$(PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT COUNT(*) FROM app_configuration" 2>/dev/null | tr -d ' ')
+
+      if [ "$COUNT" = "0" ]; then
+        echo "Initializing app_configuration table..."
+        if [ -f "/opt/init-config.sql" ]; then
+          PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /opt/init-config.sql > /dev/null 2>&1
+          FINAL_COUNT=$(PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c 'SELECT COUNT(*) FROM app_configuration' 2>/dev/null | tr -d ' ')
+          echo "Configuration initialized: $FINAL_COUNT records"
+        else
+          echo "WARNING: /opt/init-config.sql not found - configuration not initialized"
+        fi
+      else
+        echo "Configuration already exists ($COUNT records), skipping initialization"
+      fi
+      break
+    fi
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  if [ $elapsed -ge $timeout ]; then
+    echo "WARNING: Timeout waiting for deployment - configuration may not be initialized"
+  fi
+) &
+
+# Wait for JBoss process
+wait $JBOSS_PID

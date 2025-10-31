@@ -192,9 +192,10 @@ RUN cd ${JBOSS_HOME}/standalone/deployments && \
 # This custom configuration is based on standalone-full.xml with HornetQ messaging
 COPY standalone-custom.xml ${JBOSS_HOME}/standalone/configuration/standalone-custom.xml
 
-# Copy startup script
+# Copy startup script and database initialization
 COPY start-jboss.sh /opt/jboss/start-jboss.sh
 RUN chmod +x /opt/jboss/start-jboss.sh
+COPY init-config.sql /opt/init-config.sql
 
 # Expose ports
 # 8080 - HTTP
