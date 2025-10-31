@@ -170,6 +170,9 @@ RUN cd ${JBOSS_HOME}/standalone/deployments && \
     echo "Removed AssertionWSProvider from resteasy.jndi.resources" && \
     sed -i 's|</web-app>|    <servlet>\n        <servlet-name>Faces Servlet</servlet-name>\n        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>\n        <load-on-startup>1</load-on-startup>\n    </servlet>\n    <servlet-mapping>\n        <servlet-name>Faces Servlet</servlet-name>\n        <url-pattern>*.seam</url-pattern>\n    </servlet-mapping>\n</web-app>|' war-temp/WEB-INF/web.xml && \
     echo "Added Faces Servlet mapping for *.seam URLs" && \
+    sed -i '/<ui:debug\/>/d' war-temp/layout/template.xhtml && \
+    sed -i '/<ui:debug\/>/d' war-temp/xdsi/rad55.xhtml && \
+    echo "Removed JSF ui:debug tags (triggers GUM_REST_API_URL error by enumerating disabled SSO components)" && \
     cd war-temp && \
     zip -r -q ../XDStarClient-war-*.war . && \
     cd .. && \
